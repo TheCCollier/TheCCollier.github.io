@@ -1,5 +1,7 @@
 #The Quest of El Caballero
 
+##[click here](http://TheCCollier.github.io) to see our game in action
+
 Our game, <i>The Quest of El Caballero</i>, is a role-playing, action-adventure game, in which the main character must solve difficult puzzles to advance. The object of our game is to defeat the Puzzle-Creating Poacher.
 
 ##Synopsis
