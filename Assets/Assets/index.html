@@ -1,0 +1,153 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>TESTY MCTESTGAME</title>
+    <script src="libs/phaser.js"></script>
+	<style>
+		body {
+			padding: 0;
+			margin: 0;
+			background-color: #000000;
+		}
+	</style>
+</head>
+<body>
+<div id="gameContainer"></div>
+<script type="text/javascript">
+        var game = new Phaser.Game(640, 480, Phaser.AUTO, 'gameContainer');
+        var TestyMcTestFace = function (game) {
+            this.map = null;
+            this.layer = null;
+            this.car = null;
+
+            this.safetile = 1;
+            this.gridsize = 32;
+
+            this.speed = 150;
+            this.threshold = 3;
+            this.turnSpeed = 150;
+
+            this.marker = new Phaser.Point();
+            this.turnPoint = new Phaser.Point();
+
+            this.directions = [ null, null, null, null, null ];
+            this.opposites = [ Phaser.NONE, Phaser.RIGHT, Phaser.LEFT, Phaser.DOWN, Phaser.UP ];
+
+            this.current = Phaser.UP;
+            this.turning = Phaser.NONE;
+
+        }
+        
+        TestyMcTestFace.prototype = {
+            
+            init: function () {
+                this.physics.startSystem(Phaser.Physics.ARCADE);
+            },
+
+            preload: function(){
+                this.load.tilemap('map', 'tmaps/untitled.json', null, Phaser.Tilemap.TILED_JSON);
+                this.load.image('tiles', 'tmaps/tiles.png');
+                this.load.atlasXML('caballero', 'images/spritesheets/caballero.png', 'images/spritesheets/caballero.xml');
+            },
+            
+            create: function(){
+                this.map = this.add.tilemap('map');
+                this.map.addTilesetImage('tiles', 'tiles');
+
+                this.layer = this.map.createLayer('Tile Layer 1');
+
+                //this.map.setCollision(20, true, this.layer);
+
+                this.car = this.add.sprite(48, 48, 'caballero');
+                this.car.anchor.set(0.5);
+                this.car.animations.add('walkright', [0, 1, 2, 3, 4, 5], 20, true);
+                this.car.smoothed = false;
+                this.car.scale.x = 3;
+                this.car.scale.y = 3;
+
+                this.physics.arcade.enable(this.car);
+
+                this.cursors = this.input.keyboard.createCursorKeys();
+                //this.move(Phaser.RIGHT);
+            },
+            checkDirection: function (turnTo) {
+                if (this.turning === turnTo || this.directions[turnTo] === null || this.directions[turnTo].index !== this.safetile){
+                    //  Invalid direction if they're already set to turn that way
+                    //  Or there is no tile there, or the tile isn't index a floor tile
+                    return;
+                }
+                //  Check if they want to turn around and can
+                if (this.current === this.opposites[turnTo]){
+                    this.move(turnTo);
+                }
+                else{
+                    this.turning = turnTo;
+
+                    this.turnPoint.x = (this.marker.x * this.gridsize) + (this.gridsize / 2);
+                    this.turnPoint.y = (this.marker.y * this.gridsize) + (this.gridsize / 2);
+                }
+
+            },
+            move: function (direction) {
+                var speed = this.speed;
+                if (direction === Phaser.LEFT || direction === Phaser.UP){
+                    speed = -speed;
+                }
+                if (direction === Phaser.LEFT || direction === Phaser.RIGHT){
+                    this.car.body.velocity.x = speed;
+                    this.car.body.velocity.y = 0;
+                }
+                else{
+                    this.car.body.velocity.y = speed;
+                    this.car.body.velocity.x = 0;
+                }
+                //this.add.tween(this.car).to( { angle: this.getAngle(direction) }, this.turnSpeed, "Linear", true);
+                this.current = direction;
+            },
+            checkKeys: function(){
+                if (this.cursors.left.isDown && this.current !== Phaser.LEFT){
+                    //this.checkDirection(Phaser.LEFT);
+                    this.move(Phaser.LEFT);
+                    //this.car.play("walkleft")
+                }
+                else if (this.cursors.right.isDown && this.current !== Phaser.RIGHT){
+                   // this.checkDirection(Phaser.RIGHT);
+                    this.move(Phaser.RIGHT);
+                    this.car.play("walkright");
+                }
+                else if (this.cursors.up.isDown && this.current !== Phaser.UP){
+                   // this.checkDirection(Phaser.UP);
+                    this.move(Phaser.UP);
+                }
+                else if (this.cursors.down.isDown && this.current !== Phaser.DOWN){
+                   // this.checkDirection(Phaser.DOWN);
+                    this.move(Phaser.DOWN);
+                }
+                else{
+                    //  This forces them to hold the key down to turn the corner
+                  //  this.turning = Phaser.NONE;
+                }
+            },
+            update: function(){
+                this.physics.arcade.collide(this.car, this.layer);
+                this.marker.x = this.math.snapToFloor(Math.floor(this.car.x), this.gridsize) / this.gridsize;
+                this.marker.y = this.math.snapToFloor(Math.floor(this.car.y), this.gridsize) / this.gridsize;
+
+                //  Update our grid sensors
+                this.directions[1] = this.map.getTileLeft(this.layer.index, this.marker.x, this.marker.y);
+                this.directions[2] = this.map.getTileRight(this.layer.index, this.marker.x, this.marker.y);
+                this.directions[3] = this.map.getTileAbove(this.layer.index, this.marker.x, this.marker.y);
+                this.directions[4] = this.map.getTileBelow(this.layer.index, this.marker.x, this.marker.y);
+                
+                this.checkKeys();
+
+                if (this.turning !== Phaser.NONE){
+                    this.turn();
+                }
+            }
+        }
+         game.state.add('Game', TestyMcTestFace, true);
+    </script>
+</body>
+</html>
