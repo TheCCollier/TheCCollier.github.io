@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>TESTY MCTESTGAME</title>
+	<title>LA B&#218;SQUEDA DE EL CABALLERO</title>
     <script src="libs/phaser.js"></script>
 	<style>
 		body {
@@ -21,21 +21,23 @@
             this.layer = null;
             this.car = null;
 
-            this.safetile = 1;
-            this.gridsize = 32;
+            //this.safetile = 1;
+            //this.gridsize = 100;
 
             this.speed = 150;
-            this.threshold = 3;
-            this.turnSpeed = 150;
+            //this.threshold = 3;
+            //this.turnSpeed = 150;
 
-            this.marker = new Phaser.Point();
-            this.turnPoint = new Phaser.Point();
+            //this.marker = new Phaser.Point();
+            //this.turnPoint = new Phaser.Point();
 
-            this.directions = [ null, null, null, null, null ];
-            this.opposites = [ Phaser.NONE, Phaser.RIGHT, Phaser.LEFT, Phaser.DOWN, Phaser.UP ];
+            //this.directions = [ null, null, null, null, null ];
+            //this.opposites = [ Phaser.NONE, Phaser.RIGHT, Phaser.LEFT, Phaser.DOWN, Phaser.UP ];
 
             this.current = Phaser.UP;
             this.turning = Phaser.NONE;
+            
+            this.keysDown = [];
 
         }
         
@@ -46,32 +48,40 @@
             },
 
             preload: function(){
-                this.load.tilemap('map', 'tmaps/untitled.json', null, Phaser.Tilemap.TILED_JSON);
-                this.load.image('tiles', 'tmaps/tiles.png');
-                this.load.atlasXML('caballero', 'images/spritesheets/caballero.png', 'images/spritesheets/caballero.xml');
+                this.load.tilemap('map', 'tmaps/testwithtiles.json', null, Phaser.Tilemap.TILED_JSON);
+                this.load.image('tiles', 'tmaps/ALL.png');
+                this.load.atlasXML('caballero', 'images/spritesheets/caballero-full.png', 'images/spritesheets/caballero-full.xml');
             },
             
             create: function(){
                 this.map = this.add.tilemap('map');
-                this.map.addTilesetImage('tiles', 'tiles');
+                this.map.addTilesetImage('ALL', 'tiles');
 
                 this.layer = this.map.createLayer('Tile Layer 1');
+                this.map.setCollision(0, true, this.layer);
+                this.map.setCollision(1, true, this.layer);
+                this.map.setCollision(6, true, this.layer);
+                this.map.setCollision(9, true, this.layer);
 
-                //this.map.setCollision(20, true, this.layer);
-
-                this.car = this.add.sprite(48, 48, 'caballero');
+                this.car = this.add.sprite(80,96, 'caballero');
                 this.car.anchor.set(0.5);
-                this.car.animations.add('walkright', [0, 1, 2, 3, 4, 5], 20, true);
+                this.car.animations.add('idleX', [4], 20, true);
+                this.car.animations.add('idleDown', [9], 20, true);
+                this.car.animations.add('idleUp', [14], 20, true);
+                this.car.animations.add('walkX', [0,1,2,3,4], 20, true);
+                this.car.animations.add('walkDown', [5,6,7,8,9], 20, true);
+                this.car.animations.add('walkUp', [10,11,12,13,14], 20, true);
                 this.car.smoothed = false;
                 this.car.scale.x = 3;
                 this.car.scale.y = 3;
-
+                this.world.setBounds(0, 0, 640, 480);
+                this.camera.follow(this.car);
                 this.physics.arcade.enable(this.car);
 
                 this.cursors = this.input.keyboard.createCursorKeys();
                 //this.move(Phaser.RIGHT);
             },
-            checkDirection: function (turnTo) {
+            /*checkDirection: function (turnTo) {
                 if (this.turning === turnTo || this.directions[turnTo] === null || this.directions[turnTo].index !== this.safetile){
                     //  Invalid direction if they're already set to turn that way
                     //  Or there is no tile there, or the tile isn't index a floor tile
@@ -88,9 +98,15 @@
                     this.turnPoint.y = (this.marker.y * this.gridsize) + (this.gridsize / 2);
                 }
 
-            },
+            },*/
             move: function (direction) {
                 var speed = this.speed;
+                if(direction === Phaser.LEFT){
+                    this.car.scale.x = -3;
+                }
+                else{
+                    this.car.scale.x = 3;
+                }
                 if (direction === Phaser.LEFT || direction === Phaser.UP){
                     speed = -speed;
                 }
@@ -106,32 +122,53 @@
                 this.current = direction;
             },
             checkKeys: function(){
+                var key = "this.input.keyboard.lastKey";
                 if (this.cursors.left.isDown && this.current !== Phaser.LEFT){
                     //this.checkDirection(Phaser.LEFT);
-                    this.move(Phaser.LEFT);
+                    if (eval(key) == this.cursors.left){
+                        this.move(Phaser.LEFT);
+                        this.car.play("walkX")
+                    }
                     //this.car.play("walkleft")
                 }
-                else if (this.cursors.right.isDown && this.current !== Phaser.RIGHT){
+                if (this.cursors.right.isDown && this.current !== Phaser.RIGHT){
                    // this.checkDirection(Phaser.RIGHT);
-                    this.move(Phaser.RIGHT);
-                    this.car.play("walkright");
+                    if (eval(key) == this.cursors.right){
+                        this.move(Phaser.RIGHT);
+                        this.car.play("walkX");
+                    }
                 }
-                else if (this.cursors.up.isDown && this.current !== Phaser.UP){
+                if (this.cursors.up.isDown && this.current !== Phaser.UP){
                    // this.checkDirection(Phaser.UP);
-                    this.move(Phaser.UP);
+                    if (eval(key) == this.cursors.up){
+                        this.move(Phaser.UP);
+                        this.car.play("walkUp");
+                    }
                 }
-                else if (this.cursors.down.isDown && this.current !== Phaser.DOWN){
+                if (this.cursors.down.isDown && this.current !== Phaser.DOWN){
                    // this.checkDirection(Phaser.DOWN);
-                    this.move(Phaser.DOWN);
+                    if (eval(key) == this.cursors.down){
+                        this.move(Phaser.DOWN);
+                        this.car.play("walkDown");
+                    }
                 }
-                else{
-                    //  This forces them to hold the key down to turn the corner
-                  //  this.turning = Phaser.NONE;
+                if (this.current == Phaser.NONE){
+                    this.car.body.velocity.x = 0;
+                    this.car.body.velocity.y = 0;
+                    if(eval(key) == this.cursors.left || eval(key) == this.cursors.right){
+                        this.car.play("idleX");
+                    }
+                    else if(eval(key) == this.cursors.up){
+                        this.car.play("idleUp");
+                    }
+                    else{
+                        this.car.play("idleDown");
+                    }
                 }
             },
             update: function(){
                 this.physics.arcade.collide(this.car, this.layer);
-                this.marker.x = this.math.snapToFloor(Math.floor(this.car.x), this.gridsize) / this.gridsize;
+                /*this.marker.x = this.math.snapToFloor(Math.floor(this.car.x), this.gridsize) / this.gridsize;
                 this.marker.y = this.math.snapToFloor(Math.floor(this.car.y), this.gridsize) / this.gridsize;
 
                 //  Update our grid sensors
@@ -139,13 +176,31 @@
                 this.directions[2] = this.map.getTileRight(this.layer.index, this.marker.x, this.marker.y);
                 this.directions[3] = this.map.getTileAbove(this.layer.index, this.marker.x, this.marker.y);
                 this.directions[4] = this.map.getTileBelow(this.layer.index, this.marker.x, this.marker.y);
-                
+                */
                 this.checkKeys();
 
                 if (this.turning !== Phaser.NONE){
                     this.turn();
                 }
-            }
+                this.current = Phaser.NONE;
+            },
+            /*render: function () {
+                //  Un-comment this to see the debug drawing
+                for (var t = 1; t < 5; t++){
+                    if (this.directions[t] === null){
+                        continue;
+                    }
+                    var color = 'rgba(0,255,0,0.3)';
+                    if (this.directions[t].index !== this.safetile){
+                        color = 'rgba(255,0,0,0.3)';
+                    }
+                    if (t === this.current){
+                        color = 'rgba(255,255,255,0.3)';
+                    }
+                    this.game.debug.geom(new Phaser.Rectangle(this.directions[t].worldX, this.directions[t].worldY, 32, 32), color, true);
+                }
+                this.game.debug.geom(this.turnPoint, '#ffff00');
+            }*/
         }
          game.state.add('Game', TestyMcTestFace, true);
     </script>
